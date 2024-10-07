@@ -9,10 +9,11 @@ blueprint:
   input:
     camera:
       name: Caméra Frigate
-      description: Le nom de la caméra tel que défini dans votre configuration frigate.
+      description: Le nom de la caméra tel que défini dans votre configuration Frigate.
     mqtt_topic:
       name: Topic MQTT
       description: Le topic MQTT sur lequel envoyer la notification.
+      default: "frigate/notifications"  # Définissez un topic par défaut
     base_url:
       name: (Optionnel) URL de base
       description: >
@@ -37,3 +38,4 @@ action:
         data:
           topic: !input mqtt_topic
           payload: "Un {{ label }} a été détecté sur la caméra {{ camera }}. Clip vidéo: {{ base_url }}/api/frigate/notifications/{{ id }}/{{ camera }}/clip.mp4"
+          qos: 0  # Niveau de qualité de service

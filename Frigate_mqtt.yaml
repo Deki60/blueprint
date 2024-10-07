@@ -1,7 +1,7 @@
 blueprint:
   name: Notification Frigate
   description: |
-    ## Notification de l'application Frigate
+    ## Notification de l'application Frigate via MQTT
 
     Ce blueprint enverra une notification via MQTT lorsqu'un événement Frigate pour la caméra sélectionnée est déclenché. La notification inclura un lien vers le clip vidéo.
 
@@ -12,8 +12,8 @@ blueprint:
       description: Le nom de la caméra tel que défini dans votre configuration Frigate.
     mqtt_topic:
       name: Topic MQTT
-      description: Le topic MQTT sur lequel envoyer la notification.
-      default: "frigate/notifications"  # Définissez un topic par défaut
+      description: Le topic sur lequel envoyer la notification.
+      default: "alarme/events"
     base_url:
       name: (Optionnel) URL de base
       description: >
@@ -23,10 +23,8 @@ blueprint:
 mode: parallel
 trigger:
   - platform: mqtt
-    topic: frigate/events
-    payload: "{{ camera }}/new"
-    value_template: "{{ value_json['after']['camera'] }}"
-
+    topic: alarme/events
+    
 action:
   - alias: "Notification d'événement Frigate"
     sequence:
@@ -34,8 +32,10 @@ action:
           id: "{{ trigger.payload_json['after']['id'] }}"
           object: "{{ trigger.payload_json['after']['label'] }}"
           label: "{{ object | title }}"
+          camera_name: "{{ trigger.payload_json['after']['camera'] }}"
       - service: mqtt.publish
         data:
           topic: !input mqtt_topic
-          payload: "Un {{ label }} a été détecté sur la caméra {{ camera }}. Clip vidéo: {{ base_url }}/api/frigate/notifications/{{ id }}/{{ camera }}/clip.mp4"
-          qos: 0  # Niveau de qualité de service
+          payload: >
+            Un {{ label }} a été détecté sur la caméra {{ camera_name }}. 
+            Voir le clip: {{ base_url }}/api/frigate/notifications/{{ id }}/{{ camera_name }}/clip.mp4

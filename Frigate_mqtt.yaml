@@ -1,11 +1,18 @@
 blueprint:
-  name: Frigate Notification via MQTT (0.10.0)
+  name: Frigate Notification MQTT (0.10.0)
   description: |
     ## Frigate MQTT Notification
 
-    This blueprint will send a notification via MQTT when a Frigate event for the selected camera is fired. The notification will include the event details like the detected object, the camera name, and the URL to the clip and snapshot.
+    This blueprint envoie une notification MQTT lorsqu'un événement Frigate est détecté pour la caméra sélectionnée. Le message contiendra les informations sur l'objet détecté, la caméra, et les options configurables comme les zones ou les types d'objets.
 
-    You can filter notifications by zones, objects, and other parameters as per your configuration.
+    ### Required entities:
+      - Frigate Camera Name
+      - MQTT Broker (pré-configuré dans Home Assistant)
+
+    ### Optional features:
+      - Filtrer les notifications par zone
+      - Choisir les types d'objets pour lesquels recevoir des notifications
+      - Configurer un délai de silence avant de recevoir une nouvelle notification pour la même caméra
 
   domain: automation
   source_url: https://gist.github.com/hunterjm/8ff0005104dce3f28923294f49a443b1
@@ -15,53 +22,52 @@ blueprint:
       description: The name of the camera as defined in your Frigate configuration.
     mqtt_topic:
       name: MQTT Topic
-      description: The MQTT topic to publish the notification to.
-      default: "homeassistant/notifications/frigate"
+      description: Le topic MQTT où envoyer les notifications.
+      default: "homeassistant/frigate/notifications"
     base_url:
       name: (Optional) Base URL
-      description: >
-        The external URL for your Home Assistant instance. This will default to a relative
-        URL and will open the clips in the app instead of the browser.
+      description: |
+        L'URL externe de ton instance Home Assistant. Cela permettra de créer un lien vers les clips et images dans le message MQTT.
       default: ""
     critical:
-      name: (Optional) Critical Notification
-      description: Send as a critical notification via MQTT.
+      name: (Optional) Notification critique
+      description: Si cette option est activée, un message critique sera envoyé.
       default: false
       selector:
         boolean:
     update_thumbnail:
-      name: (Optional) Update Thumbnail
-      description: Update notification if a new "better" thumbnail is available.
+      name: (Optional) Mise à jour du Thumbnail
+      description: Si une meilleure miniature est disponible, elle sera incluse dans la notification.
       default: false
       selector:
         boolean:
     zone_filter:
-      name: (Optional) Zone Filter
-      description: Only notify if an object has entered a defined zone.
+      name: (Optional) Filtre de zone
+      description: Envoyer une notification uniquement si l'objet détecté entre dans une zone définie.
       default: false
       selector:
         boolean:
     zones:
-      name: (Optional) Trigger Zones
-      description: A list (-) of zones you wish to receive notifications for.
+      name: (Optional) Zones de déclenchement
+      description: Liste des zones pour lesquelles tu souhaites recevoir des notifications.
       default: []
       selector:
         object:
     labels:
-      name: (Optional) Trigger Objects
-      description: A list (-) of objects you wish to receive notifications for.
+      name: (Optional) Objets déclencheurs
+      description: Liste des objets pour lesquels tu souhaites recevoir des notifications.
       default: []
       selector:
         object:
     presence_filter:
-      name: (Optional) Presence Filter
-      description: Only notify if the selected presence entity is not "home".
+      name: (Optional) Filtre de présence
+      description: Envoyer une notification uniquement si l'entité de présence sélectionnée n'est pas "home".
       default: ""
       selector:
         entity:
     cooldown:
-      name: (Optional) Cooldown
-      description: Delay before sending another notification for this camera after the last event.
+      name: (Optional) Délai entre notifications
+      description: Temps avant d'envoyer une nouvelle notification pour la même caméra après le dernier événement.
       default: 30
       selector:
         number:
@@ -69,9 +75,9 @@ blueprint:
           min: 0
           unit_of_measurement: seconds
     silence_timer:
-      name: (Optional) Silence New Object Notifications
-      description: >
-        How long to silence notifications for this camera when requested.
+      name: (Optional) Silence des notifications
+      description: |
+        Combien de temps désactiver les notifications pour cette caméra après une demande d'alerte via une notification.
       default: 30
       selector:
         number:
@@ -79,10 +85,9 @@ blueprint:
           min: 0
           unit_of_measurement: minutes
     loiter_timer:
-      name: (Optional) Loitering Notifications
-      description: >
-        Sends new loitering notification if a stationary object is detected for longer
-        than the specified time. 0 is off and will not send notifications.
+      name: (Optional) Notifications pour objets stationnaires
+      description: |
+        Envoie une notification si un objet stationnaire est détecté pendant plus longtemps que le délai configuré.
       default: 0
       selector:
         number:
@@ -94,11 +99,6 @@ mode: parallel
 trigger_variables:
     camera: !input camera
 trigger:
-  - platform: event
-    event_type: mobile_app_notification_action
-    event_data:
-      action: 'silence-{{ camera }}'
-    id: silence
   - platform: mqtt
     topic: frigate/events
     payload: "{{ camera }}/new"
@@ -110,6 +110,7 @@ variables:
   base_url: !input base_url
   critical: !input critical
   update_thumbnail: !input update_thumbnail
+  mqtt_topic: !input mqtt_topic
   zone_only: !input zone_filter
   input_zones: !input zones
   zones: "{{ input_zones | list }}"
@@ -118,26 +119,8 @@ variables:
   presence_entity: !input presence_filter
   cooldown: !input cooldown
   loiter_timer: !input loiter_timer
-  fps_value: "{{ states('sensor.' + camera + '_camera_fps') }}"
-  fps: "{{ fps_value|int if is_number(fps_value) or 5 }}"
-  mqtt_topic: !input mqtt_topic
 action:
   - choose:
-    - alias: "Silence New Object Notifications"
-      conditions:
-        - condition: trigger
-          id: silence
-      sequence:
-        - service: automation.turn_off
-          target:
-            entity_id: "{{ this.entity_id }}"
-          data:
-            stop_actions: false
-        - delay:
-            minutes: !input silence_timer
-        - service: automation.turn_on
-          target:
-            entity_id: "{{ this.entity_id }}"
     - alias: "Frigate Event"
       conditions:
         - condition: trigger
@@ -149,7 +132,6 @@ action:
             id: "{{ trigger.payload_json['after']['id'] }}"
             object: "{{ trigger.payload_json['after']['label'] }}"
             label: "{{ object | title }}"
-            # Dynamic Variables per event
             initial_home: "{{ presence_entity != '' and is_state(presence_entity, 'home') }}"
             initial_entered_zones: "{{ trigger.payload_json['after']['entered_zones'] }}"
         - alias: "Notifications enabled for object label"
@@ -166,31 +148,92 @@ action:
                   data:
                     topic: "{{ mqtt_topic }}"
                     payload: >
-                      A {{ label }} was detected on the {{ camera_name }} camera.
-                      Clip: {{ base_url }}/api/frigate/notifications/{{id}}/{{camera}}/clip.mp4
-                      Snapshot: {{ base_url }}/api/frigate/notifications/{{id}}/snapshot.jpg
-                    retain: true
-        - repeat:
-            sequence:
-              - wait_for_trigger:
-                - platform: mqtt
-                  topic: frigate/events
-                  payload: "{{ id }}"
-                  value_template: "{{ value_json['after']['id'] }}"
-                timeout:
-                  minutes: 2
-                continue_on_timeout: false
-              - variables:
-                  event: "{{ wait.trigger.payload_json }}"
-                  new_snapshot: "{{ update_thumbnail and event['before']['snapshot_time'] != event['after']['snapshot_time'] }}"
-              - alias: "Notify on significant change"
-                choose:
-                  - conditions: "{{ new_snapshot }}"
-                    sequence:
-                      - service: mqtt.publish
-                        data:
-                          topic: "{{ mqtt_topic }}"
-                          payload: >
-                            Updated snapshot available for {{ camera_name }} camera.
-                            Snapshot: {{ base_url }}/api/frigate/notifications/{{id}}/snapshot.jpg
-                          retain: true
+                      {
+                        "message": "A {{ label }} was detected on the {{ camera_name }} camera.",
+                        "camera": "{{ camera_name }}",
+                        "label": "{{ label }}",
+                        "zones": "{{ initial_entered_zones }}",
+                        "url": "{{base_url}}/api/frigate/notifications/{{id}}/{{camera}}/clip.mp4"
+                      }
+            - repeat:
+        sequence:
+          - wait_for_trigger:
+            - platform: mqtt
+              topic: frigate/events
+            continue_on_timeout: false
+          - variables:
+              event: "{{ trigger.payload_json }}"
+              id: "{{ event['after']['id'] }}"
+              label: "{{ event['after']['label'] }}"
+              camera: "{{ event['after']['camera'] }}"
+              zones: "{{ event['after']['zones'] }}"
+              entered_zones: "{{ ', '.join(event['after']['entered_zones']) if event['after']['entered_zones'] else 'None' }}"
+              camera_name: "{{ states['camera.' + camera + '_person']['name'] }}"
+              mqtt_topic: "custom/frigate_notifications/{{ camera }}/{{ label }}"
+              snapshot_url: "{{ base_url }}/api/frigate/notifications/{{ id }}/{{ camera }}/snapshot.jpg"
+              clip_url: "{{ base_url }}/api/frigate/notifications/{{ id }}/{{ camera }}/clip.mp4"
+          - choose:
+              - conditions: "{{ zones and 'your_desired_zone' in zones }}"
+                sequence:
+                  - service: mqtt.publish
+                    data:
+                      topic: "{{ mqtt_topic }}"
+                      payload: >
+                        {
+                          "message": "Motion detected on camera {{ camera_name }} with object {{ label }} in zone {{ entered_zones }}.",
+                          "camera": "{{ camera_name }}",
+                          "label": "{{ label }}",
+                          "zones": "{{ entered_zones }}",
+                          "snapshot": "{{ snapshot_url }}",
+                          "clip": "{{ clip_url }}"
+                        }
+              - conditions: "{{ not zones }}"
+                sequence:
+                  - service: mqtt.publish
+                    data:
+                      topic: "{{ mqtt_topic }}"
+                      payload: >
+                        {
+                          "message": "Motion detected on camera {{ camera_name }} with object {{ label }} outside any specified zone.",
+                          "camera": "{{ camera_name }}",
+                          "label": "{{ label }}",
+                          "snapshot": "{{ snapshot_url }}",
+                          "clip": "{{ clip_url }}"
+                        }
+    - alias: "Motion Detection With No Zones"
+      trigger:
+        - platform: mqtt
+          topic: "frigate/events"
+      condition:
+        - condition: template
+          value_template: "{{ not event['after']['zones'] }}"
+      action:
+        - service: mqtt.publish
+          data:
+            topic: "custom/no_zone_alert/{{ camera }}/{{ label }}"
+            payload: >
+              {
+                "message": "Motion detected on {{ camera_name }} but outside of designated zones.",
+                "camera": "{{ camera_name }}",
+                "label": "{{ label }}",
+                "snapshot": "{{ snapshot_url }}",
+                "clip": "{{ clip_url }}"
+              }
+  - alias: "Handle Finished Events"
+    trigger:
+      - platform: state
+        entity_id: "sensor.frigate_event_done"
+        to: "finished"
+    action:
+      - service: mqtt.publish
+        data:
+          topic: "custom/frigate_finished/{{ camera }}/{{ label }}"
+          payload: >
+            {
+              "message": "The event for object {{ label }} detected by {{ camera_name }} has finished.",
+              "camera": "{{ camera_name }}",
+              "label": "{{ label }}",
+              "zones": "{{ entered_zones }}",
+              "snapshot": "{{ snapshot_url }}",
+              "clip": "{{ clip_url }}"
+            }

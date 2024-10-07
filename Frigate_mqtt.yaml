@@ -200,40 +200,40 @@ action:
                           "snapshot": "{{ snapshot_url }}",
                           "clip": "{{ clip_url }}"
                         }
-    - alias: "Motion Detection With No Zones"
-      trigger:
-        - platform: mqtt
-          topic: "frigate/events"
-      condition:
-        - condition: template
-          value_template: "{{ not event['after']['zones'] }}"
-      action:
-        - service: mqtt.publish
-          data:
-            topic: "custom/no_zone_alert/{{ camera }}/{{ label }}"
-            payload: >
-              {
-                "message": "Motion detected on {{ camera_name }} but outside of designated zones.",
-                "camera": "{{ camera_name }}",
-                "label": "{{ label }}",
-                "snapshot": "{{ snapshot_url }}",
-                "clip": "{{ clip_url }}"
-              }
-  - alias: "Handle Finished Events"
-    trigger:
-      - platform: state
-        entity_id: "sensor.frigate_event_done"
-        to: "finished"
-    action:
-      - service: mqtt.publish
-        data:
-          topic: "custom/frigate_finished/{{ camera }}/{{ label }}"
-          payload: >
-            {
-              "message": "The event for object {{ label }} detected by {{ camera_name }} has finished.",
-              "camera": "{{ camera_name }}",
-              "label": "{{ label }}",
-              "zones": "{{ entered_zones }}",
-              "snapshot": "{{ snapshot_url }}",
-              "clip": "{{ clip_url }}"
-            }
+              - alias: "Motion Detection With No Zones"
+                trigger:
+                  - platform: mqtt
+                    topic: "frigate/events"
+                condition:
+                  - condition: template
+                    value_template: "{{ not event['after']['zones'] }}"
+                action:
+                  - service: mqtt.publish
+                    data:
+                      topic: "custom/no_zone_alert/{{ camera }}/{{ label }}"
+                      payload: >
+                        {
+                          "message": "Motion detected on {{ camera_name }} but outside of designated zones.",
+                          "camera": "{{ camera_name }}",
+                          "label": "{{ label }}",
+                          "snapshot": "{{ snapshot_url }}",
+                          "clip": "{{ clip_url }}"
+                        }
+              - alias: "Handle Finished Events"
+                trigger:
+                  - platform: state
+                    entity_id: "sensor.frigate_event_done"
+                    to: "finished"
+                action:
+                  - service: mqtt.publish
+                    data:
+                      topic: "custom/frigate_finished/{{ camera }}/{{ label }}"
+                      payload: >
+                        {
+                          "message": "The event for object {{ label }} detected by {{ camera_name }} has finished.",
+                          "camera": "{{ camera_name }}",
+                          "label": "{{ label }}",
+                          "zones": "{{ entered_zones }}",
+                          "snapshot": "{{ snapshot_url }}",
+                          "clip": "{{ clip_url }}"
+                        }

@@ -23,7 +23,7 @@ blueprint:
 mode: parallel
 trigger:
   - platform: mqtt
-    topic: alarme/events
+    topic: frigate/events
     
 action:
   - alias: "Notification d'événement Frigate"

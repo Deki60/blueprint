@@ -55,9 +55,9 @@ action:
       qos: !input qos
       retain: !input retain
       payload: >
-      {
-        "sia_code": "{{ !input sia_number }}",
-        "capteur": ""Nri001"",
-        "message": "{{ !input payload_message }}",
-      }
+        {
+          "sia_code": "{{ !input sia_number }}",
+          "capteur": "Nri001",
+          "message": "{{ !input payload_message }}"
+        }
 mode: single

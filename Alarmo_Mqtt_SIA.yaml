@@ -1,61 +1,65 @@
-alias: Intrusion capteur Alarmo
-description: "Détection d'intrusion via capteurs Alarmo, publication MQTT avec trame SIA"
+blueprint:
+  name: Intrusion capteur Alarmo
+  description: Détection d'intrusion via capteurs Alarmo, publication MQTT avec trame SIA
+  domain: automation
+  input:
+    alarmo_sensor:
+      name: Capteur Alarmo
+      description: Capteur de mouvement ou autre capteur d'Alarmo
+      selector:
+        entity:
+          domain: binary_sensor
+    sia_number:
+      name: Numéro SIA
+      description: Numéro du capteur pour la trame SIA
+      default: 001
+      selector:
+        number:
+          min: 1
+          max: 999
+    mqtt_topic:
+      name: Sujet MQTT
+      description: Sujet sur lequel publier les messages MQTT
+      default: 'alarme/alarme'
+      selector:
+        text:
+    payload_message:
+      name: Message à envoyer
+      description: Message personnalisé
+      default: "Intrusion détectée par le capteur Alarmo"
+      selector:
+        text
+    qos:
+      name: QoS (Qualité de Service)
+      description: Niveau QoS de la publication MQTT
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 2
+    retain:
+      name: Retenir le message
+      description: Si le message MQTT doit être retenu
+      default: false
+      selector:
+        boolean
+
 trigger:
   - platform: state
-    entity_id: !input 'alarmo_sensor'
+    entity_id: !input alarmo_sensor
     to: 'on'
-condition: []
+
 action:
   - service: mqtt.publish
     data:
-      topic: !input 'mqtt_topic'
-      qos: !input 'qos'
-      retain: !input 'retain'
-      payload: >-
+      topic: !input mqtt_topic
+      qos: !input qos
+      retain: !input retain
+      payload: >
         {
-          "sia_code": "BA{{ '{:03d}'.format(!input sia_number) }}",
+          "sia_code": "BA{{ '{:03d}'.format( !input sia_number ) }}",
           "capteur": "{{ states[!input.alarmo_sensor].name }}",
           "message": "{{ !input.payload_message }}"
         }
+
 mode: single
-input:
-  alarmo_sensor:
-    name: Sélectionner un capteur Alarmo
-    description: Choisir un capteur d'Alarmo
-    selector:
-      entity:
-        domain: binary_sensor
-        device_class: motion  # Adapter à ton type de capteur si nécessaire
-  sia_number:
-    name: Numéro SIA pour le capteur
-    description: Numéro du capteur pour la trame SIA
-    selector:
-      number:
-        min: 1
-        max: 999
-        step: 1
-  mqtt_topic:
-    name: Sujet MQTT
-    description: Le sujet MQTT pour publier la trame
-    selector:
-      text:
-        multiline: false
-  payload_message:
-    name: Message à envoyer
-    description: Message personnalisé pour le capteur
-    selector:
-      text:
-        multiline: true
-  qos:
-    name: Qualité de service (QoS)
-    description: Niveau QoS du message MQTT
-    selector:
-      number:
-        min: 0
-        max: 2
-        step: 1
-  retain:
-    name: Retenir le message
-    description: Conserver le message MQTT
-    selector:
-      boolean: {}

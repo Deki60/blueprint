@@ -8,7 +8,7 @@ condition: []
 action:
   - service: mqtt.publish
     data:
-      topic: alarme/alarme
+      topic: !input 'mqtt_topic'
       qos: !input 'qos'
       retain: !input 'retain'
       payload: >-
@@ -25,7 +25,7 @@ input:
     selector:
       entity:
         domain: binary_sensor
-        device_class: motion  # Utiliser la classe appropriée pour ton capteur
+        device_class: motion  # Adapter à ton type de capteur si nécessaire
   sia_number:
     name: Numéro SIA pour le capteur
     description: Numéro du capteur pour la trame SIA
@@ -37,14 +37,15 @@ input:
   mqtt_topic:
     name: Sujet MQTT
     description: Le sujet MQTT pour publier la trame
-    default: "alarme/alarme"
     selector:
-      text: {}
+      text:
+        multiline: false
   payload_message:
     name: Message à envoyer
     description: Message personnalisé pour le capteur
     selector:
-      text: {}
+      text:
+        multiline: true
   qos:
     name: Qualité de service (QoS)
     description: Niveau QoS du message MQTT

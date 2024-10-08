@@ -1,63 +1,54 @@
 blueprint:
-  name: Intrusion capteur Alarmo avec MQTT
-  description: Détection d'intrusion via capteurs Alarmo avec publication MQTT
+  name: Alarmo SIA MQTT Notification
+  author: VotreNom
+  description: >
+    Publie un message MQTT en fonction des capteurs d'Alarmo avec un numéro SIA personnalisé.
+
   domain: automation
   input:
     alarmo_sensor:
-      name: Capteur Alarmo
-      description: Capteur de mouvement ou autre capteur d'Alarmo
+      name: Alarmo Sensor
+      description: >
+        Sélecteur pour choisir le capteur d'Alarmo à surveiller.
       selector:
         entity:
-          domain: binary_sensor
-    sia_number:
-      name: Numero du capteur
-      description: Inscrire le numéro du capteur SIA
-      default: "BA"
-      selector:
-        text: {}
+          filter:
+            - domain: binary_sensor
+            - domain: sensor
+          multiple: false
     mqtt_topic:
-      name: Sujet MQTT
-      description: Sujet sur lequel publier les messages MQTT
-      default: 'alarme/alarme'
+      name: MQTT Topic
+      description: >
+        Le topic MQTT où le message SIA sera publié.
       selector:
-        text: {}
-    payload_message:
-      name: Message à envoyer
-      description: Message personnalisé
-      default: "Intrusion détectée par le capteur Alarmo"
+        text:
+          multiline: false
+    sia_number:
+      name: SIA Number
+      description: >
+        Numéro SIA personnalisé pour ce capteur.
       selector:
-        text: {}
-    qos:
-      name: QoS (Qualité de Service)
-      description: Niveau QoS de la publication MQTT
-      default: 0
+        text:
+          multiline: false
+    message_template:
+      name: Message Template
+      description: >
+        Modèle de message SIA à publier, utilisez {{ sensor_name }} pour le nom du capteur.
       selector:
-        number:
-          min: 0
-          max: 2
-          mode: slider
-    retain:
-      name: Retenir le message
-      description: Si le message MQTT doit être retenu
-      default: false
-      selector:
-        boolean: {}
+        text:
+          multiline: true
 
 trigger:
   - platform: state
     entity_id: !input alarmo_sensor
-    to: 'on'
 
 action:
   - service: mqtt.publish
     data:
       topic: !input mqtt_topic
-      qos: !input qos
-      retain: !input retain
       payload: >
-        {
-          "sia_code": !input "sia_number",
-          "capteur": "Nri001",
-          "message": !input "payload_message"
-        }
-mode: single
+        {{ 
+          (expand(!input alarmo_sensor)[0].name ~ ': ' ~ !input message_template)
+          | replace('{{ sensor_name }}', expand(!input alarmo_sensor)[0].name)
+          | replace('{{ sia_number }}', !input sia_number)
+        }}

@@ -1,66 +1,40 @@
 blueprint:
-  name: Intrusion capteur Alarmo avec MQTT
-  description: Détection d'intrusion via capteurs Alarmo avec publication MQTT
+  name: Publish SIA Message
+  description: Publie un message SIA sur MQTT à partir d'un capteur Alarmo
   domain: automation
   input:
-    alarmo_sensor:
-      name: Capteur Alarmo
-      description: Capteur de mouvement ou autre capteur d'Alarmo
-      selector:
-        entity:
-          domain: binary_sensor
     sia_number:
-      name: Numéro SIA
-      description: Numéro du capteur pour la trame SIA
-      default: 1
+      name: Numéro de SIA
+      description: Le numéro de capteur à envoyer.
       selector:
         number:
           min: 1
           max: 999
           mode: box
-    mqtt_topic:
-      name: Sujet MQTT
-      description: Sujet sur lequel publier les messages MQTT
-      default: 'alarme/alarme'
-      selector:
-        text: {}
+
     payload_message:
-      name: Message à envoyer
-      description: Message personnalisé
-      default: "Intrusion détectée par le capteur Alarmo"
+      name: Message du payload
+      description: Message à envoyer.
       selector:
         text: {}
-    qos:
-      name: QoS (Qualité de Service)
-      description: Niveau QoS de la publication MQTT
-      default: 0
-      selector:
-        number:
-          min: 0
-          max: 2
-          mode: slider
-    retain:
-      name: Retenir le message
-      description: Si le message MQTT doit être retenu
-      default: false
-      selector:
-        boolean: {}
 
 trigger:
-  - platform: state
-    entity_id: !input alarmo_sensor
-    to: 'on'
+  - platform: device
+    device_id: ca046768e09ac9c8aaf0e2c866b91adf
+    domain: alarm_control_panel
+    entity_id: 4bae2f9242f3b58aba179ee43e60bbda
+    type: triggered
 
 action:
   - service: mqtt.publish
     data:
-      topic: !input mqtt_topic
-      qos: !input qos
-      retain: !input retain
+      topic: alarme/alarme
+      qos: 0
+      retain: false
       payload: >
         {
-          "sia_code": "BA{{ '{:03d}'.format(input.sia_number) }}",
+          "sia_code": "BA{{ '{:03d}'.format(sia_number) }}",
           "capteur": "Nri001",
-          "message": "{{ input.payload_message }}"
+          "message": "{{ payload_message }}"
         }
 mode: single

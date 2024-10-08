@@ -10,7 +10,7 @@ blueprint:
         entity:
           domain: binary_sensor
     sia_number:
-      name: Numéro du capteur
+      name: Numero du capteur
       description: Inscrire le numéro du capteur SIA
       default: "BA"
       selector:

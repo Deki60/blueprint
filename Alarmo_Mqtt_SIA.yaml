@@ -12,7 +12,7 @@ blueprint:
     sia_number:
       name: Numéro SIA
       description: Numéro du capteur pour la trame SIA
-      default: 001
+      default: 1
       selector:
         number:
           min: 1
@@ -23,15 +23,13 @@ blueprint:
       description: Sujet sur lequel publier les messages MQTT
       default: 'alarme/alarme'
       selector:
-        text:
-          multiline: false
+        text: {}
     payload_message:
       name: Message à envoyer
       description: Message personnalisé
       default: "Intrusion détectée par le capteur Alarmo"
       selector:
-        text:
-          multiline: true
+        text: {}
     qos:
       name: QoS (Qualité de Service)
       description: Niveau QoS de la publication MQTT
@@ -46,8 +44,7 @@ blueprint:
       description: Si le message MQTT doit être retenu
       default: false
       selector:
-        boolean:
-          mode: toggle
+        boolean: {}
 
 trigger:
   - platform: state

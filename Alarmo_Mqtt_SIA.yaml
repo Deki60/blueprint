@@ -24,11 +24,6 @@ blueprint:
       default: "alarme/alarme"
       selector:
         text:
-    mqtt_broker:
-      name: "Sélectionner le broker MQTT"
-      description: "Choisir le broker MQTT pour la publication"
-      selector:
-        mqtt:
     payload_message:
       name: "Message personnalisé"
       description: "Message à envoyer dans la trame SIA"
@@ -46,7 +41,7 @@ action:
       topic: !input mqtt_topic
       payload: >
         {
-          "sia_code": "BA{{ '{:03d}'.format(states['!input sensor'].object_id.split('_')[-1]) }}",
+          "sia_code": "BA{{ '{:03d}'.format(!input sia_code) }}",
           "capteur": "Nri001",
           "message": "{{ states['!input sensor'].name }} : {{ !input payload_message }}"
         }

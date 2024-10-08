@@ -1,39 +1,54 @@
 blueprint:
-  name: "Automatisation MQTT avec capteurs Alarmo"
-  description: "Publie un message MQTT basé sur un capteur Alarmo avec un numéro SIA personnalisé"
+  name: "Envoi MQTT avec capteurs Alarmo"
+  description: "Publie un message MQTT avec une trame SIA basée sur les capteurs configurés dans Alarmo"
   domain: automation
   input:
-    sensor:
+    alarmo_sensor:
       name: "Sélectionner un capteur d'Alarmo"
       description: "Choisir un capteur configuré dans Alarmo"
       selector:
         entity:
           domain: binary_sensor
-    sia_code:
-      name: "Numéro SIA du capteur"
-      description: "Numéro personnalisé pour le capteur qui sera utilisé dans la trame SIA"
-      default: "001"
+          device_class: presence
+    sia_number:
+      name: "Numéro SIA pour le capteur"
+      description: "Le numéro du capteur pour le code SIA"
       selector:
         number:
           min: 1
           max: 999
           step: 1
+          mode: slider
     mqtt_topic:
       name: "Sujet MQTT"
-      description: "Le sujet dans lequel publier le message MQTT"
+      description: "Sujet dans lequel publier le message MQTT"
       default: "alarme/alarme"
       selector:
         text
     payload_message:
-      name: "Message personnalisé"
-      description: "Message à envoyer dans la trame SIA"
+      name: "Message pour la trame SIA"
+      description: "Message spécifique pour le capteur"
       selector:
         text
+    qos:
+      name: "Qualité de Service (QoS)"
+      description: "Niveau QoS du message MQTT"
+      selector:
+        number:
+          min: 0
+          max: 2
+          step: 1
+          mode: slider
+    retain:
+      name: "Conserver le message MQTT"
+      description: "Indicateur de conservation du message"
+      selector:
+        boolean
 
 trigger:
   platform: state
-  entity_id: !input sensor
-  to: "on"  # Déclencheur lorsque l'état du capteur passe à 'on' (ouvert/présent)
+  entity_id: !input alarmo_sensor
+  to: "on"
 
 action:
   - service: mqtt.publish
@@ -41,11 +56,11 @@ action:
       topic: !input mqtt_topic
       payload: >
         {
-          "sia_code": "BA{{ '{:03d}'.format(!input sia_code) }}",
+          "sia_code": "BA{{ '{:03d}'.format(!input sia_number) }}",
           "capteur": "Nri001",
-          "message": "{{ states[!input.sensor].name }} : {{ !input.payload_message }}"
+          "message": "{{ states[!input.alarmo_sensor].name }} : {{ !input.payload_message }}"
         }
-      qos: 1
-      retain: true
+      qos: !input qos
+      retain: !input retain
 
 mode: single

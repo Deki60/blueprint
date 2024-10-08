@@ -12,20 +12,20 @@ blueprint:
 
     sia_code:
       name: Code SIA
-      description: 'Le code SIA à envoyer (ex: BA003).'  # Assurez-vous que les apostrophes sont correctement placées
+      description: "Le code SIA à envoyer (ex: BA003)."  # Utilisation des guillemets pour éviter les erreurs
       selector:
         text: {}
 
     payload_message:
       name: Message du payload
-      description: 'Message à envoyer.'  # Utilisez des apostrophes ou des guillemets pour éviter les problèmes
+      description: "Message à envoyer."  # Utilisation des guillemets pour éviter les erreurs
       selector:
         text: {}
 
 trigger:
   - platform: state
     entity_id: !input alarm_sensor
-    to: 'on'  # État activé du capteur (peut être ajusté selon vos besoins)
+    to: 'on'  # État activé du capteur (ajustez selon vos besoins)
 
 action:
   - service: mqtt.publish
@@ -36,6 +36,6 @@ action:
       payload: >
         {
           "sia_code": "{{ sia_code }}",
-          "capteur": "Nri001",  # Vous pouvez personnaliser ce champ selon vos besoins
+          "capteur": "Nri001",  # Ajustez ce champ si nécessaire
           "message": "{{ payload_message }}"
         }

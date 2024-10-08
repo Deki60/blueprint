@@ -56,8 +56,8 @@ action:
       retain: !input retain
       payload: >
         {
-          "sia_code": "{{ !input.sia_number }}",
+          "sia_code": !input "sia_number",
           "capteur": "Nri001",
-          "message": "{{ !input.payload_message }}"
+          "message": !input "payload_message"
         }
 mode: single

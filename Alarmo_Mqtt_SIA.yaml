@@ -1,6 +1,6 @@
 blueprint:
-  name: Intrusion capteur Alarmo
-  description: Détection d'intrusion via capteurs Alarmo, publication MQTT avec trame SIA
+  name: Intrusion capteur Alarmo avec MQTT
+  description: Détection d'intrusion via capteurs Alarmo avec publication MQTT
   domain: automation
   input:
     alarmo_sensor:
@@ -17,18 +17,21 @@ blueprint:
         number:
           min: 1
           max: 999
+          mode: box
     mqtt_topic:
       name: Sujet MQTT
       description: Sujet sur lequel publier les messages MQTT
       default: 'alarme/alarme'
       selector:
         text:
+          multiline: false
     payload_message:
       name: Message à envoyer
       description: Message personnalisé
       default: "Intrusion détectée par le capteur Alarmo"
       selector:
-        text
+        text:
+          multiline: true
     qos:
       name: QoS (Qualité de Service)
       description: Niveau QoS de la publication MQTT
@@ -37,12 +40,14 @@ blueprint:
         number:
           min: 0
           max: 2
+          mode: slider
     retain:
       name: Retenir le message
       description: Si le message MQTT doit être retenu
       default: false
       selector:
-        boolean
+        boolean:
+          mode: toggle
 
 trigger:
   - platform: state

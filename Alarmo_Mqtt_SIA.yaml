@@ -11,7 +11,7 @@ blueprint:
           domain: binary_sensor
     sia_number:
       name: Numero du capteur
-      description: inscrire le numero du capteur SIA
+      description: Inscrire le numéro du capteur SIA
       default: "BA"
       selector:
         text: {}
@@ -56,8 +56,8 @@ action:
       retain: !input retain
       payload: >
         {
-          "sia_code": "{{ sia_number }}",
+          "sia_code": "{{ !input.sia_number }}",
           "capteur": "Nri001",
-          "message": "{{ payload_message }}"
+          "message": "{{ !input.payload_message }}"
         }
 mode: single

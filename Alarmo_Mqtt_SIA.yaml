@@ -58,10 +58,6 @@ action:
       qos: !input qos
       retain: !input retain
       payload: >
-        {
-          "sia_code": "BA{{ '{:03d}'.format( !input.sia_number ) }}",
-          "capteur": "{{ states[!input.alarmo_sensor].name }}",
-          "message": "{{ !input.payload_message }}"
-        }
+        '{ "sia_code": "BA{{ "{:03d}".format(!input.sia_number) }}", "capteur": "{{ states[!input.alarmo_sensor].name }}", "message": "{{ !input.payload_message }}" } }'
 
 mode: single

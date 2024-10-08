@@ -53,9 +53,9 @@ action:
     data:
       name: "Débogage MQTT"
       message: >
-        SIA Code: {{ sia_number }}, 
+        SIA Code: {{ !input sia_number }}, 
         Capteur: Nri001, 
-        Message: {{ payload_message }}
+        Message: {{ !input payload_message }}
 
   - service: mqtt.publish
     data:
@@ -64,8 +64,8 @@ action:
       retain: !input retain
       payload: >
         {
-          "sia_code": "{{ sia_number }}",
+          "sia_code": "{{ !input sia_number }}",
           "capteur": "Nri001",
-          "message": "{{ payload_message }}"
-        } | tojson
+          "message": "{{ !input payload_message }}"
+        }
 mode: single

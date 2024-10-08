@@ -23,12 +23,12 @@ blueprint:
       description: "Sujet sur lequel publier le message MQTT"
       default: "alarme/alarme"
       selector:
-        text
+        text: {}
     payload_message:
       name: "Message pour la trame SIA"
       description: "Message spécifique pour le capteur"
       selector:
-        text
+        text: {}
     qos:
       name: "Qualité de Service (QoS)"
       description: "Niveau QoS du message MQTT"
@@ -41,7 +41,7 @@ blueprint:
       name: "Conserver le message MQTT"
       description: "Indicateur de conservation du message"
       selector:
-        boolean
+        boolean: {}
 
 trigger:
   platform: state

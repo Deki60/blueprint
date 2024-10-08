@@ -1,54 +1,39 @@
 blueprint:
-  name: Alarmo SIA MQTT Notification
-  author: VotreNom
-  description: >
-    Publie un message MQTT en fonction des capteurs d'Alarmo avec un numéro SIA personnalisé.
-
+  name: Alarmo MQTT Notifications
+  description: Publie des messages MQTT basés sur des capteurs d'Alarmo.
   domain: automation
   input:
     alarmo_sensor:
-      name: Alarmo Sensor
-      description: >
-        Sélecteur pour choisir le capteur d'Alarmo à surveiller.
+      name: Capteur d'alarme
       selector:
         entity:
-          filter:
-            - domain: binary_sensor
-            - domain: sensor
-          multiple: false
-    mqtt_topic:
-      name: MQTT Topic
-      description: >
-        Le topic MQTT où le message SIA sera publié.
-      selector:
-        text:
-          multiline: false
+          domain: binary_sensor
     sia_number:
-      name: SIA Number
-      description: >
-        Numéro SIA personnalisé pour ce capteur.
+      name: Numéro SIA
+      description: Numéro SIA associé au capteur.
+      default: '1234'
       selector:
         text:
-          multiline: false
-    message_template:
-      name: Message Template
-      description: >
-        Modèle de message SIA à publier, utilisez {{ sensor_name }} pour le nom du capteur.
+          max_length: 4
+    mqtt_topic:
+      name: Topic MQTT
+      default: 'alarmo/notifications'
       selector:
         text:
-          multiline: true
 
 trigger:
-  - platform: state
-    entity_id: !input alarmo_sensor
+  platform: state
+  entity_id: !input alarmo_sensor
+  to: 'on'
 
 action:
   - service: mqtt.publish
     data:
       topic: !input mqtt_topic
       payload: >
-        {{ 
-          (expand(!input alarmo_sensor)[0].name ~ ': ' ~ !input message_template)
-          | replace('{{ sensor_name }}', expand(!input alarmo_sensor)[0].name)
-          | replace('{{ sia_number }}', !input sia_number)
-        }}
+        {
+          "sia_number": "{{ !input.sia_number }}",
+          "sensor_name": "{{ trigger.entity_id.split('.')[1] }}",
+          "message": "L'alarme a été déclenchée par {{ trigger.entity_id.split('.')[1] }}"
+        }
+      qos: 1

@@ -1,39 +1,71 @@
 blueprint:
-  name: Alarmo MQTT Notifications
-  description: Publie des messages MQTT basés sur des capteurs d'Alarmo.
+  name: Intrusion capteur Alarmo avec MQTT
+  description: Détection d'intrusion via capteurs Alarmo avec publication MQTT
   domain: automation
   input:
     alarmo_sensor:
-      name: Capteur d'alarme
+      name: Capteur Alarmo
+      description: Capteur de mouvement ou autre capteur d'Alarmo
       selector:
         entity:
           domain: binary_sensor
     sia_number:
-      name: Numéro SIA
-      description: Numéro SIA associé au capteur.
-      default: '1234'
+      name: Numéro du capteur
+      description: Inscrire le numéro du capteur SIA
+      default: "BA"
       selector:
-        text:
-          max_length: 4
+        text: {}
     mqtt_topic:
-      name: Topic MQTT
-      default: 'alarmo/notifications'
+      name: Sujet MQTT
+      description: Sujet sur lequel publier les messages MQTT
+      default: 'alarme/alarme'
       selector:
-        text:
+        text: {}
+    payload_message:
+      name: Message à envoyer
+      description: Message personnalisé
+      default: "Intrusion détectée par le capteur Alarmo"
+      selector:
+        text: {}
+    qos:
+      name: QoS (Qualité de Service)
+      description: Niveau QoS de la publication MQTT
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 2
+          mode: slider
+    retain:
+      name: Retenir le message
+      description: Si le message MQTT doit être retenu
+      default: false
+      selector:
+        boolean: {}
 
 trigger:
-  platform: state
-  entity_id: !input alarmo_sensor
-  to: 'on'
+  - platform: state
+    entity_id: !input alarmo_sensor
+    to: 'on'
 
 action:
+  - service: logbook.log
+    data:
+      name: "Débogage MQTT"
+      message: >
+        SIA Code: {{ sia_number }}, 
+        Capteur: Nri001, 
+        Message: {{ payload_message }}
+
   - service: mqtt.publish
     data:
       topic: !input mqtt_topic
+      qos: !input qos
+      retain: !input retain
       payload: >
         {
-          "sia_number": "{{ !input.sia_number }}",
-          "sensor_name": "{{ trigger.entity_id.split('.')[1] }}",
-          "message": "L'alarme a été déclenchée par {{ trigger.entity_id.split('.')[1] }}"
-        }
-      qos: 1
+          "sia_code": "{{ sia_number }}",
+          "capteur": "Nri001",
+          "message": "{{ payload_message }}"
+        } | tojson
+mode: single

@@ -48,15 +48,6 @@ trigger:
     entity_id: !input alarmo_sensor
     to: 'on'
 
-action:
-  - service: logbook.log
-    data:
-      name: "Débogage MQTT"
-      message: >
-        SIA Code: {{ !input sia_number }}, 
-        Capteur: Nri001, 
-        Message: {{ !input payload_message }}
-
   - service: mqtt.publish
     data:
       topic: !input mqtt_topic

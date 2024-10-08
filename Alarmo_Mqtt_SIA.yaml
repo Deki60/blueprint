@@ -10,14 +10,11 @@ blueprint:
         entity:
           domain: binary_sensor
 
-    sia_number:
-      name: Numéro de SIA
-      description: Le numéro de capteur à envoyer.
+    sia_code:
+      name: Code SIA
+      description: Le code SIA à envoyer (ex: BA003).
       selector:
-        number:
-          min: 1
-          max: 999
-          mode: box
+        text: {}
 
     payload_message:
       name: Message du payload
@@ -38,7 +35,7 @@ action:
       retain: false
       payload: >
         {
-          "sia_code": "BA{{ '{:03d}'.format((sia_number | int)) }}",
+          "sia_code": "{{ sia_code }}",
           "capteur": "Nri001",  # Vous pouvez personnaliser ce champ selon vos besoins
           "message": "{{ payload_message }}"
         }

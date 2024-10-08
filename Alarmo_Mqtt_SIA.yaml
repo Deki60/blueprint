@@ -12,13 +12,13 @@ blueprint:
 
     sia_code:
       name: Code SIA
-      description: Le code SIA à envoyer (ex: BA003).
+      description: 'Le code SIA à envoyer (ex: BA003).'  # Assurez-vous que les apostrophes sont correctement placées
       selector:
         text: {}
 
     payload_message:
       name: Message du payload
-      description: Message à envoyer.
+      description: 'Message à envoyer.'  # Utilisez des apostrophes ou des guillemets pour éviter les problèmes
       selector:
         text: {}
 

@@ -39,3 +39,4 @@ action:
           "capteur": "Nri001",  # Ajustez ce champ si nécessaire
           "message": "{{ payload_message }}"
         }
+mode: single

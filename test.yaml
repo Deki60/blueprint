@@ -1,0 +1,30 @@
+blueprint:
+  name: Send Custom MQTT Message
+  description: Sends a custom message to MQTT when a specified entity changes state.
+  domain: automation
+  input:
+    mqtt_topic:
+      name: MQTT Topic
+      description: The MQTT topic to publish the message to.
+      selector:
+        text:
+    entity:
+      name: Entity
+      description: The entity to monitor for state changes.
+      selector:
+        entity: {}
+    custom_message:
+      name: Custom Message
+      description: The message you want to send to MQTT.
+      selector:
+        text:
+
+trigger:
+  - platform: state
+    entity_id: !input entity
+
+action:
+  - service: mqtt.publish
+    data:
+      topic: !input mqtt_topic
+      payload: !input custom_message

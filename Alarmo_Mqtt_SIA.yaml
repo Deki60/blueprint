@@ -38,7 +38,7 @@ action:
       retain: false
       payload: >
         {
-          "sia_code": "BA{{ '{:03d}'.format(sia_number) }}",
+          "sia_code": "BA{{ '{:03d}'.format((sia_number | int)) }}",
           "capteur": "Nri001",  # Vous pouvez personnaliser ce champ selon vos besoins
           "message": "{{ payload_message }}"
         }

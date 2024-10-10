@@ -1,0 +1,39 @@
+blueprint:
+  name: Publier un message MQTT basé sur Alarmo
+  description: "Publie un message MQTT personnalisé en fonction du capteur déclenché dans Alarmo"
+  domain: automation
+  input:
+    alarm_entity:
+      name: Entité Alarmo
+      description: "L'entité Alarmo pour déclencher l'alerte"
+      selector:
+        entity:
+          domain: alarm_control_panel
+    mqtt_topic:
+      name: MQTT Topic
+      description: "Le topic sur lequel publier le message MQTT"
+      default: "home/alarm"
+      selector:
+        text:
+    sia_number:
+      name: Numéro SIA personnalisé
+      description: "Numéro SIA unique pour chaque capteur"
+      default: "1234"
+      selector:
+        text:
+
+trigger:
+  - platform: state
+    entity_id: !input alarm_entity
+    to: "triggered"
+
+action:
+  - service: mqtt.publish
+    data:
+      topic: !input mqtt_topic
+      payload: >-
+        {
+          "sia_number": "{{ sia_number }}",
+          "sensor": "{{ trigger.to_state.attributes.open_sensors }}",
+          "message": "Alerte déclenchée par le capteur : {{ trigger.to_state.attributes.open_sensors }}"
+        }

@@ -13,12 +13,17 @@ blueprint:
       name: Appareil Déclencheur
       description: Sélectionnez un appareil pour le déclencheur
       selector:
-        device: {}  # Sélectionnez un appareil
+        device: {}
     trigger:
       name: Déclencheur
       description: Sélectionnez le type de déclencheur pour l'appareil
       selector:
-        trigger: {}  # Permet de choisir un déclencheur dynamique
+        trigger: {}
+    domain:
+      name: Domaine
+      description: Sélectionnez le domaine de l'appareil
+      selector:
+        text: {}
     sia_number:
       name: Numéro du capteur SIA
       description: Entrez le numéro SIA pour le capteur
@@ -57,7 +62,7 @@ trigger:
   - platform: device
     device_id: !input trigger_device
     type: !input trigger  # Utilise le type de déclencheur sélectionné
-    domain: !input domain  # Le domaine peut être sélectionné dynamiquement si nécessaire
+    domain: !input domain  # Utilise le domaine sélectionné
     entity_id: !input alarmo_sensor
 
 action:

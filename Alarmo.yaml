@@ -11,18 +11,18 @@ blueprint:
           domain: binary_sensor
     trigger_device:
       name: Appareil Déclencheur
-      description: Sélectionnez l'appareil qui déclenche l'événement
+      description: Sélectionnez un appareil pour le déclencheur
       selector:
-        entity:
-          domain: device_tracker
+        device: {}  # Permet de sélectionner un appareil
     trigger_type:
       name: Type de Déclencheur
-      description: Sélectionnez le type de déclencheur
+      description: Sélectionnez le type de déclencheur pour l'appareil
       selector:
         select:
           options:
-            - "Présent"
-            - "Absent"
+            - "arming"
+            - "disarming"
+            - "triggered"
     sia_number:
       name: Numéro du capteur SIA
       description: Entrez le numéro SIA pour le capteur
@@ -58,12 +58,14 @@ blueprint:
         boolean: {}
 
 trigger:
+  - platform: device
+    device_id: !input trigger_device
+    domain: alarm_control_panel
+    entity_id: !input alarmo_sensor
+    type: !input trigger_type
   - platform: state
     entity_id: !input alarmo_sensor
     to: 'on'
-  - platform: state
-    entity_id: !input trigger_device
-    to: !input trigger_type
 
 action:
   - service: mqtt.publish

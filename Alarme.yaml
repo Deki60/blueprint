@@ -1,5 +1,5 @@
 blueprint:
-  name: Alarmo to MQTT
+  name: Alarme to MQTT for SIA
   description: Publier un message MQTT lors d'un changement d'etat
   domain: automation
   input:

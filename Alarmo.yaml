@@ -58,7 +58,6 @@ blueprint:
 trigger:
   - platform: device
     device_id: !input trigger_device
-    domain: !input alarmo_sensor_domain  # Utilisez un moyen pour obtenir le domaine
     entity_id: !input alarmo_sensor
     type: !input trigger_type
 

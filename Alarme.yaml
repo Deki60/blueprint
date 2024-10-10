@@ -1,6 +1,6 @@
 blueprint:
   name: Alarmo to MQTT
-  description: Publier un message MQTT lors d'une détection d'intrusion via un capteur Alarmo
+  description: Publier un message MQTT lors d'un changement d'etat
   domain: automation
   input:
     trigger:

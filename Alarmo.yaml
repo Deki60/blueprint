@@ -14,11 +14,13 @@ blueprint:
       description: Sélectionnez l'appareil de déclenchement
       selector:
         device: {}
-    domain:
-      name: Domaine
-      description: Sélectionnez le domaine de l'appareil
+    trigger_type:
+      name: Type de Déclencheur
+      description: Sélectionnez le type de déclencheur
       selector:
-        text: {}
+        select:
+          options: []
+          # Vous devez définir les options dynamiquement en fonction de l'appareil sélectionné.
     sia_number:
       name: Numéro du capteur SIA
       description: Entrez le numéro SIA pour le capteur
@@ -56,9 +58,9 @@ blueprint:
 trigger:
   - platform: device
     device_id: !input trigger_device
-    domain: !input domain
-    type: !input trigger
+    domain: !input alarmo_sensor_domain  # Utilisez un moyen pour obtenir le domaine
     entity_id: !input alarmo_sensor
+    type: !input trigger_type
 
 action:
   - service: mqtt.publish

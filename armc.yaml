@@ -60,7 +60,7 @@ action:
       qos: !input qos
       retain: !input retain
       payload: >
-        {"sia_code": "{{ sia_code }}", "capteur": "Nri001", "message": "{{ message }}"}
+        {"sia_code": "{{ sia_code }}", "capteur": "Nri", "message": "{{ message }}"}
 
 variables:
   sia_code: !input sia_number

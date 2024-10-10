@@ -10,15 +10,10 @@ blueprint:
         entity:
           domain: binary_sensor
     trigger_device:
-      name: Appareil Déclencheur
-      description: Sélectionnez un appareil pour le déclencheur
+      name: Appareil de Déclenchement
+      description: Sélectionnez l'appareil de déclenchement
       selector:
         device: {}
-    trigger:
-      name: Déclencheur
-      description: Sélectionnez le type de déclencheur pour l'appareil
-      selector:
-        trigger: {}
     domain:
       name: Domaine
       description: Sélectionnez le domaine de l'appareil
@@ -61,8 +56,8 @@ blueprint:
 trigger:
   - platform: device
     device_id: !input trigger_device
-    type: !input trigger  # Utilise le type de déclencheur sélectionné
-    domain: !input domain  # Utilise le domaine sélectionné
+    domain: !input domain
+    type: !input trigger
     entity_id: !input alarmo_sensor
 
 action:

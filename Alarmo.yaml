@@ -1,6 +1,6 @@
 blueprint:
-  name: Alarmo to MQTT with Actions
-  description: Publier un message MQTT lors d'une détection via un capteur Alarmo et inclure des actions personnalisées
+  name: Alarmo to MQTT
+  description: Publier un message MQTT lors d'une détection d'intrusion via un capteur Alarmo
   domain: automation
   input:
     alarmo_sensor:
@@ -9,6 +9,20 @@ blueprint:
       selector:
         entity:
           domain: binary_sensor
+    trigger_device:
+      name: Appareil Déclencheur
+      description: Sélectionnez l'appareil qui déclenche l'événement
+      selector:
+        entity:
+          domain: device_tracker
+    trigger_type:
+      name: Type de Déclencheur
+      description: Sélectionnez le type de déclencheur
+      selector:
+        select:
+          options:
+            - "Présent"
+            - "Absent"
     sia_number:
       name: Numéro du capteur SIA
       description: Entrez le numéro SIA pour le capteur
@@ -42,25 +56,14 @@ blueprint:
       default: false
       selector:
         boolean: {}
-    action_type:
-      name: Type d'action d'Alarmo
-      description: Sélectionnez le type d'action à réaliser
-      selector:
-        select:
-          options:
-            - trigger_siren
-            - send_notification
-            - custom_action
-    custom_action_service:
-      name: Service personnalisé (si "custom_action" est sélectionné)
-      description: Entrez le service à appeler pour une action personnalisée
-      selector:
-        text: {}
 
 trigger:
   - platform: state
     entity_id: !input alarmo_sensor
     to: 'on'
+  - platform: state
+    entity_id: !input trigger_device
+    to: !input trigger_type
 
 action:
   - service: mqtt.publish
@@ -70,21 +73,6 @@ action:
       retain: !input retain
       payload: >
         {"sia_code": "{{ sia_code }}", "capteur": "Nri001", "message": "{{ message }}"}
-
-  - choose:
-      - conditions: "{{ action_type == 'trigger_siren' }}"
-        sequence:
-          - service: alarm_control_panel.alarm_trigger
-            target:
-              entity_id: !input alarmo_sensor
-      - conditions: "{{ action_type == 'send_notification' }}"
-        sequence:
-          - service: notify.notify
-            data:
-              message: "Intrusion détectée par le capteur Alarmo"
-      - conditions: "{{ action_type == 'custom_action' }}"
-        sequence:
-          - service: !input custom_action_service
 
 variables:
   sia_code: !input sia_number

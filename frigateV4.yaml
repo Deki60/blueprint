@@ -11,6 +11,11 @@ blueprint:
       name: Caméra Frigate
       description: La caméra à surveiller, selon celles définies dans Frigate.
       selector:
+        entity:
+          integration: frigate
+          domain: camera
+          device_class: camera
+          multiple: true
         select:
     mqtt_topic:
       name: Topic MQTT

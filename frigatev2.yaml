@@ -1,0 +1,50 @@
+blueprint:
+  name: Frigate Camera Notifications via MQTT
+  description: "Send Frigate camera motion detection notifications with preview, thumbnail, and clip via MQTT."
+  domain: automation
+  input:
+    camera_entity:
+      name: Camera
+      description: "Select the camera entity from Frigate."
+      selector:
+        entity:
+          domain: camera
+    mqtt_topic:
+      name: MQTT Topic
+      description: "Specify the MQTT topic to publish notifications."
+      default: "frigate/events"
+      selector:
+        text:
+    ha_url:
+      name: URL HA
+      description: "Base URL of your Home Assistant or Frigate instance (e.g., https://my-ha.local)."
+      default: "https://my-ha.local"
+      selector:
+        text
+    trigger_event:
+      name: Trigger Event
+      description: "Event that will trigger the notification (e.g., motion detection)."
+      default: "motion"
+      selector:
+        text
+
+trigger:
+  - platform: state
+    entity_id: !input camera_entity
+    to: 'on'
+
+action:
+  - service: mqtt.publish
+    data:
+      topic: "{{ !input mqtt_topic }}/{{ trigger.entity_id }}"
+      payload: |
+        {
+          "title": "Frigate Alert",
+          "message": "Motion detected on {{ trigger.to_state.attributes.friendly_name }}",
+          "camera": "{{ trigger.to_state.attributes.friendly_name }}",
+          "image_url": "{{ !input ha_url }}/api/events/{{ trigger.to_state.attributes.event_id }}/snapshot.jpg",
+          "clip_url": "{{ !input ha_url }}/api/events/{{ trigger.to_state.attributes.event_id }}/clip.mp4",
+          "preview_url": "{{ !input ha_url }}/api/events/{{ trigger.to_state.attributes.event_id }}/snapshot.jpg"
+        }
+
+mode: single

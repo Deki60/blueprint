@@ -1,0 +1,42 @@
+blueprint:
+  name: Notification Frigate
+  description: |
+    ## Notification de l'application Frigate via MQTT
+
+    Ce blueprint enverra une notification via MQTT lorsqu'un événement Frigate pour la caméra sélectionnée est déclenché. La notification inclura un lien vers le clip vidéo et un lien vers l'image de détection (snapshot).
+
+  domain: automation
+  input:
+    camera:
+      name: Caméra Frigate
+      description: Le nom de la caméra tel que défini dans votre configuration Frigate.
+    mqtt_topic:
+      name: Topic MQTT
+      description: Le topic sur lequel envoyer la notification.
+      default: "alarme/events"
+    base_url:
+      name: (Optionnel) URL de base
+      description: >
+        L'URL externe de votre instance Home Assistant. Cela s'ouvrira dans l'application plutôt que dans le navigateur.
+      default: ""
+
+mode: parallel
+trigger:
+  - platform: mqtt
+    topic: frigate/events
+    
+action:
+  - alias: "Notification d'événement Frigate"
+    sequence:
+      - variables:
+          id: "{{ trigger.payload_json['after']['id'] }}"
+          object: "{{ trigger.payload_json['after']['label'] }}"
+          label: "{{ object | title }}"
+          camera_name: "{{ trigger.payload_json['after']['camera'] }}"
+      - service: mqtt.publish
+        data:
+          topic: !input mqtt_topic
+          payload: >
+            Un {{ label }} a été détecté sur la caméra {{ camera_name }}. 
+            Voir le clip: {{ base_url }}/api/frigate/notifications/{{ id }}/{{ camera_name }}/clip.mp4
+            Snapshot: {{ base_url }}/api/frigate/notifications/{{ id }}/{{ camera_name }}/snapshot.jpg

@@ -1,0 +1,85 @@
+blueprint:
+  name: Frigate Camera Notifications via MQTT
+  description: "Send Frigate camera motion detection notifications with preview, thumbnail, and clip via MQTT."
+  domain: automation
+  input:
+    camera:
+      name: Camera
+      description: "Frigate camera entity"
+      selector:
+        entity:
+          domain: camera
+    notify_target:
+      name: MQTT Topic
+      description: "Specify the MQTT topic to send notifications"
+      default: "frigate/events"
+      selector:
+        text
+    url_ha:
+      name: URL HA
+      description: "Base URL of your Home Assistant or Frigate instance (e.g., https://my-ha.local)."
+      default: "https://my-ha.local"
+      selector:
+        text
+    person_detected:
+      name: Person Detected
+      description: "A notification will be sent if a person is detected."
+      default: true
+      selector:
+        boolean
+    vehicle_detected:
+      name: Vehicle Detected
+      description: "A notification will be sent if a vehicle is detected."
+      default: true
+      selector:
+        boolean
+    other_detected:
+      name: Other Object Detected
+      description: "A notification will be sent if other objects are detected."
+      default: true
+      selector:
+        boolean
+    cooldown:
+      name: Notification Cooldown (minutes)
+      description: "Time in minutes between notifications per camera."
+      default: 5
+      selector:
+        number:
+          min: 0
+          max: 60
+          unit_of_measurement: minutes
+
+trigger:
+  - platform: state
+    entity_id: !input camera
+    attribute: 'person'
+    to: 'on'
+    enabled: !input person_detected
+  - platform: state
+    entity_id: !input camera
+    attribute: 'vehicle'
+    to: 'on'
+    enabled: !input vehicle_detected
+  - platform: state
+    entity_id: !input camera
+    attribute: 'other'
+    to: 'on'
+    enabled: !input other_detected
+
+condition: []
+
+action:
+  - service: mqtt.publish
+    data:
+      topic: "{{ !input notify_target }}/{{ trigger.entity_id }}"
+      payload: |
+        {
+          "title": "Frigate Alert",
+          "message": "Motion detected on {{ trigger.to_state.attributes.friendly_name }}",
+          "camera": "{{ trigger.to_state.attributes.friendly_name }}",
+          "image_url": "{{ !input url_ha }}/api/events/{{ trigger.to_state.attributes.event_id }}/snapshot.jpg",
+          "clip_url": "{{ !input url_ha }}/api/events/{{ trigger.to_state.attributes.event_id }}/clip.mp4",
+          "preview_url": "{{ !input url_ha }}/api/events/{{ trigger.to_state.attributes.event_id }}/snapshot.jpg"
+        }
+
+mode: single

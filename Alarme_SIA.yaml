@@ -1,0 +1,81 @@
+blueprint:
+  name: Alarme to MQTT for SIA
+  description: Publier un message MQTT lors d'un changement d'état avec vérification de l'armement de l'alarme
+  domain: automation
+  input:
+    trigger:
+      name: Déclencheur
+      description: Sélectionnez un déclencheur pour l'automatisation
+      selector:
+        trigger: {}
+    alarmo_sensor:
+      name: Capteur Alarmo
+      description: Sélectionnez un capteur Alarmo
+      selector:
+        entity:
+          domain: binary_sensor
+    sia_number:
+      name: Numéro du capteur SIA
+      description: Entrez le numéro SIA pour le capteur
+      default: "BA"
+      selector:
+        text: {}
+    mqtt_topic:
+      name: Sujet MQTT
+      description: Entrez le sujet sur lequel publier le message MQTT
+      default: 'alarme/alarme'
+      selector:
+        text: {}
+    payload_message:
+      name: Message à envoyer
+      description: Entrez le message personnalisé à envoyer
+      default: "Intrusion détectée par le capteur Alarmo"
+      selector:
+        text: {}
+    qos:
+      name: QoS (Qualité de Service)
+      description: Sélectionnez le niveau QoS pour la publication MQTT
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 2
+          mode: slider
+    retain:
+      name: Retenir le message
+      description: Choisissez si le message MQTT doit être retenu
+      default: false
+      selector:
+        boolean: {}
+    alarmo_state:
+      name: État de l'alarme
+      description: Entrez l'entité représentant l'état de l'alarme
+      selector:
+        entity:
+          domain: alarm_control_panel
+
+trigger:
+  - platform: state
+    entity_id: !input alarmo_sensor
+    to: 'on'
+
+condition:
+  - condition: state
+    entity_id: !input alarmo_state
+    state: 'armed_away'  # Vérifie si l'alarme est armée (changer selon tes états possibles)
+  
+action:
+  - service: mqtt.publish
+    data:
+      topic: !input mqtt_topic
+      qos: !input qos
+      retain: !input retain
+      payload: >
+        {"sia_code": "{{ sia_code }}", "capteur": "Nri", "message": "{{ message }}"}
+
+variables:
+  sia_code: !input sia_number
+  message: !input payload_message
+  entity: !input alarmo_sensor
+
+mode: single

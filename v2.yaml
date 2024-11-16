@@ -1,0 +1,73 @@
+blueprint:
+  name: Alarme to MQTT for SIA (capteurs multiples)
+  description: Publier un message MQTT spécifique pour chaque capteur avec possibilité de personnalisation.
+  domain: automation
+  input:
+    capteurs_alarmo:
+      name: Liste des capteurs Alarmo
+      description: Ajoutez un ou plusieurs capteurs Alarmo
+      selector:
+        target:
+          entity:
+            domain: binary_sensor
+    sia_number:
+      name: Numéro SIA commun
+      description: Numéro SIA pour identifier les capteurs (par défaut BA)
+      default: "BA"
+      selector:
+        text: {}
+    mqtt_topic:
+      name: Sujet MQTT
+      description: Sujet commun pour tous les capteurs
+      default: 'alarme/alarme'
+      selector:
+        text: {}
+    messages_personnalises:
+      name: Messages personnalisés pour chaque capteur
+      description: Ajoutez un message MQTT unique pour chaque capteur
+      default:
+        - entity: binary_sensor.capteur_1
+          message: "Intrusion détectée par le capteur 1"
+        - entity: binary_sensor.capteur_2
+          message: "Intrusion détectée par le capteur 2"
+      selector:
+        object: {}
+    qos:
+      name: QoS (Qualité de Service)
+      description: Niveau QoS pour la publication MQTT
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 2
+          mode: slider
+    retain:
+      name: Retenir le message
+      description: Message MQTT doit-il être retenu ?
+      default: false
+      selector:
+        boolean: {}
+
+trigger:
+  - platform: state
+    entity_id: !input capteurs_alarmo
+    to: 'on'
+
+action:
+  - service: mqtt.publish
+    data:
+      topic: !input mqtt_topic
+      qos: !input qos
+      retain: !input retain
+      payload: >
+        {
+          "sia_code": "{{ sia_code }}",
+          "capteur": "{{ trigger.entity_id }}",
+          "message": "{{ (dict(!input messages_personnalises) | selectattr('entity', 'eq', trigger.entity_id) | map(attribute='message') | first) }}"
+        }
+
+variables:
+  sia_code: !input sia_number
+  capteurs_alarmo: !input capteurs_alarmo
+
+mode: single

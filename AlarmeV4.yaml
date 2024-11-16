@@ -1,0 +1,57 @@
+blueprint:
+  name: Publier MQTT pour capteurs avec condition
+  description: Publie un message MQTT spécifique pour chaque capteur après avoir vérifié une condition.
+  domain: automation
+  input:
+    sensors:
+      name: Liste des capteurs
+      description: Sélectionnez les capteurs à surveiller.
+      selector:
+        target:
+          entity:
+            domain: binary_sensor
+    mqtt_topic:
+      name: Sujet MQTT
+      description: Sujet MQTT commun pour tous les capteurs.
+      default: "alarme/capteurs"
+      selector:
+        text: {}
+    sensor_messages:
+      name: Messages des capteurs
+      description: Définissez un message unique pour chaque capteur (format JSON).
+      default: '{"binary_sensor.capteur_1": "Intrusion détectée capteur 1", "binary_sensor.capteur_2": "Intrusion détectée capteur 2"}'
+      selector:
+        text: {}
+    condition_entity:
+      name: Entité de condition
+      description: Entité qui doit répondre à une condition spécifique avant l’exécution.
+      selector:
+        entity: {}
+    condition_state:
+      name: État de la condition
+      description: État que l'entité doit avoir pour valider la condition.
+      default: "on"
+      selector:
+        text: {}
+
+trigger:
+  - platform: state
+    entity_id: !input sensors
+    to: "on"
+
+condition:
+  - condition: state
+    entity_id: !input condition_entity
+    state: !input condition_state
+
+action:
+  - service: mqtt.publish
+    data:
+      topic: !input mqtt_topic
+      payload: >
+        {
+          "capteur": "{{ trigger.entity_id }}",
+          "message": "{{ (dict(!input sensor_messages))[trigger.entity_id] }}"
+        }
+
+mode: single

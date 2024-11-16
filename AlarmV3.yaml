@@ -1,0 +1,87 @@
+blueprint:
+  name: Alarme to MQTT for SIA
+  description: Publier un message MQTT lors d'un changement d'état avec une condition "ET SI" sur n'importe quelle entité
+  domain: automation
+  input:
+    trigger:
+      name: Déclencheur
+      description: Sélectionnez un déclencheur pour l'automatisation
+      selector:
+        trigger: {}
+    alarmo_sensor:
+      name: Capteur Alarmo
+      description: Sélectionnez un capteur Alarmo
+      selector:
+        entity:
+          domain: binary_sensor
+    sia_number:
+      name: Numéro du capteur SIA
+      description: Entrez le numéro SIA pour le capteur
+      default: "BA"
+      selector:
+        text: {}
+    mqtt_topic:
+      name: Sujet MQTT
+      description: Entrez le sujet sur lequel publier le message MQTT
+      default: 'alarme/alarme'
+      selector:
+        text: {}
+    payload_message:
+      name: Message à envoyer
+      description: Entrez le message personnalisé à envoyer
+      default: "Intrusion détectée par le capteur Alarmo"
+      selector:
+        text: {}
+    qos:
+      name: QoS (Qualité de Service)
+      description: Sélectionnez le niveau QoS pour la publication MQTT
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 2
+          mode: slider
+    retain:
+      name: Retenir le message
+      description: Choisissez si le message MQTT doit être retenu
+      default: false
+      selector:
+        boolean: {}
+    condition_sensor:
+      name: Condition "ET SI"
+      description: Sélectionnez une entité à vérifier avant d'envoyer le message (ex. prise, lumière, lave-linge, etc.)
+      selector:
+        entity: {}
+    condition_state:
+      name: Etat de la condition
+      description: Choisissez l'état de l'entité pour valider la condition (ex. "on", "off", "idle", etc.)
+      selector:
+        text: {}
+
+trigger:
+  - platform: state
+    entity_id: !input alarmo_sensor
+    to: 'on'
+  - platform: state
+    entity_id: !input condition_sensor
+
+condition:
+  - condition: state
+    entity_id: !input condition_sensor
+    state: !input condition_state
+
+action:
+  - service: mqtt.publish
+    data:
+      topic: !input mqtt_topic
+      qos: !input qos
+      retain: !input retain
+      payload: >
+        {"sia_code": "{{ sia_code }}", "capteur": "{{ entity }}", "message": "{{ message }}"}
+
+variables:
+  sia_code: !input sia_number
+  message: !input payload_message
+  entity: !input alarmo_sensor
+
+mode: single

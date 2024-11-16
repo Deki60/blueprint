@@ -1,0 +1,63 @@
+blueprint:
+  name: Alarme vers MQTT avec messages personnalisés
+  description: Publie un message MQTT personnalisé en fonction du capteur déclenché.
+  domain: automation
+  input:
+    sensors:
+      name: Liste des capteurs
+      description: Ajoutez plusieurs capteurs pour surveiller leur état.
+      selector:
+        target:
+          entity:
+            domain: binary_sensor
+    mqtt_topic:
+      name: Sujet MQTT
+      description: Sujet MQTT sur lequel les messages seront publiés.
+      default: "alarme/notification"
+      selector:
+        text: {}
+    qos:
+      name: Niveau QoS
+      description: Niveau de qualité de service pour MQTT.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 2
+          mode: slider
+    retain:
+      name: Retenir le message
+      description: Définir si le message doit être retenu par le broker MQTT.
+      default: false
+      selector:
+        boolean: {}
+    messages:
+      name: Messages personnalisés
+      description: Associez un message spécifique à chaque capteur (format JSON).
+      default: '{"binary_sensor.capteur_1": "Intrusion détectée capteur 1"}'
+      selector:
+        text: {}
+
+trigger:
+  - platform: state
+    entity_id: !input sensors
+    to: "on"
+
+condition:
+  - condition: template
+    value_template: >
+      {{ trigger.entity_id in (dict(!input messages).keys()) }}
+
+action:
+  - service: mqtt.publish
+    data:
+      topic: !input mqtt_topic
+      qos: !input qos
+      retain: !input retain
+      payload: >
+        {
+          "capteur": "{{ trigger.entity_id }}",
+          "message": "{{ (dict(!input messages))[trigger.entity_id] }}"
+        }
+
+mode: single
